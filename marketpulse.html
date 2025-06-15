@@ -3,124 +3,178 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Volume Profile Signals</title>
+  <title>MarketPulse | Volume Profile Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2962FF;
-      --secondary: #0d47a1;
-      --positive: #26a69a;
-      --negative: #ef5350;
-      --neutral: #78909c;
-      --bg: #f5f5f5;
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --positive: #06d6a0;
+      --negative: #ef476f;
+      --neutral: #64748b;
+      --bg: #f8fafc;
       --card-bg: #ffffff;
-      --text: #263238;
-      --border: #e0e0e0;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Inter', sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      margin: 0;
-      padding: 0;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 0 20px;
     }
 
-    header {
+    /* Header Styles */
+    .header {
+      background-color: var(--card-bg);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 0;
+    }
+
+    .nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border);
     }
 
-    h1 {
-      margin: 0;
-      color: var(--secondary);
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
     }
 
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: var(--neutral);
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--primary);
+    }
+
+    /* Main Content */
+    .main {
+      padding: 2rem 0;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-description {
+      color: var(--neutral);
+      max-width: 700px;
+    }
+
+    /* Ticker Selector */
     .ticker-selector {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
       overflow-x: auto;
-      padding-bottom: 10px;
+      padding-bottom: 0.5rem;
     }
 
     .ticker-btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 20px;
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
       background-color: var(--card-bg);
-      color: var(--text);
+      border: 1px solid var(--border);
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .ticker-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
     }
 
     .ticker-btn.active {
       background-color: var(--primary);
+      border-color: var(--primary);
       color: white;
     }
 
-    .ticker-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-
+    /* Chart Container */
     .chart-container {
       position: relative;
       height: 500px;
-      margin-bottom: 30px;
+      margin-bottom: 2rem;
       background-color: var(--card-bg);
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-radius: 0.5rem;
+      box-shadow: var(--shadow);
       overflow: hidden;
     }
 
-    #main-chart {
-      width: 100%;
-      height: 100%;
-    }
-
-    .signal-panel {
+    /* Signal Cards */
+    .signal-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
 
     .signal-card {
       background-color: var(--card-bg);
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
       transition: transform 0.2s;
     }
 
     .signal-card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-4px);
     }
 
     .signal-title {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 10px;
-      color: var(--secondary);
+      margin-bottom: 0.75rem;
+      color: var(--neutral);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .signal-value {
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       font-weight: 700;
-      margin-bottom: 5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .signal-change {
+      font-weight: 600;
     }
 
     .positive {
@@ -131,103 +185,199 @@
       color: var(--negative);
     }
 
+    /* Volume Clusters */
     .volume-clusters {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
+      gap: 0.5rem;
+      margin-top: 1rem;
     }
 
     .cluster-pill {
       background-color: var(--primary);
       color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.9rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
     }
 
-    .gaps-container {
-      margin-top: 15px;
+    /* Gaps Section */
+    .gaps-section {
+      margin-top: 1.5rem;
     }
 
     .gaps-title {
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 0.75rem;
+      color: var(--neutral);
     }
 
-    .gaps {
-      display: flex;
-      gap: 15px;
+    .gaps-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
     }
 
     .gap-direction {
-      flex: 1;
+      background-color: var(--bg);
+      border-radius: 0.375rem;
+      padding: 1rem;
     }
 
     .gap-direction-title {
-      font-size: 0.9rem;
-      margin-bottom: 5px;
-      color: var(--neutral);
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .gap-values {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 0.5rem;
     }
 
     .gap-value {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.9rem;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: 500;
     }
 
     .gap-above {
-      background-color: rgba(38, 166, 154, 0.1);
+      background-color: rgba(6, 214, 160, 0.1);
       color: var(--positive);
     }
 
     .gap-below {
-      background-color: rgba(239, 83, 80, 0.1);
+      background-color: rgba(239, 71, 111, 0.1);
       color: var(--negative);
     }
 
+    /* Current Price Banner */
+    .price-banner {
+      background-color: var(--primary);
+      color: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .current-price {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .price-change {
+      font-weight: 600;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Responsive Adjustments */
     @media (max-width: 768px) {
-      .signal-panel {
+      .signal-grid {
         grid-template-columns: 1fr;
       }
       
       .chart-container {
         height: 400px;
       }
+      
+      .gaps-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav-links {
+        gap: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .price-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Volume Profile Signals</h1>
-      <div class="current-price" id="current-price">Loading...</div>
-    </header>
-
-    <div class="ticker-selector" id="ticker-selector">
-      <!-- Ticker buttons will be added here by JavaScript -->
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <nav class="nav">
+        <div class="logo">MarketPulse</div>
+        <div class="nav-links">
+          <a href="index.html" class="nav-link">Home</a>
+          <a href="marketpulse.html" class="nav-link active">Volume Profile</a>
+          <a href="news.html" class="nav-link">News</a>
+          <a href="login.html" class="nav-link">Login</a>
+        </div>
+      </nav>
     </div>
+  </header>
 
-    <div class="chart-container">
-      <div id="main-chart"></div>
-    </div>
+  <!-- Main Content -->
+  <main class="main">
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Volume Profile Analysis</h1>
+        <p class="page-description">
+          Interactive visualization of key volume profile metrics including Point of Control (POC), 
+          Value Area (VAL/VAH), and volume clusters to identify significant support/resistance levels.
+        </p>
+      </div>
 
-    <div class="signal-panel" id="signal-panel">
-      <!-- Signal cards will be added here by JavaScript -->
+      <!-- Current Price Banner -->
+      <div class="price-banner" id="price-banner">
+        <div class="price-info">
+          <span id="current-ticker">AAPL</span>
+          <span class="current-price" id="current-price">$198.58</span>
+          <span class="price-change negative" id="price-change">-2.92 (-1.45%)</span>
+        </div>
+        <div id="market-status">Market Open</div>
+      </div>
+
+      <!-- Ticker Selector -->
+      <div class="ticker-selector" id="ticker-selector">
+        <!-- Ticker buttons will be added by JavaScript -->
+      </div>
+
+      <!-- Chart Container -->
+      <div class="chart-container">
+        <div id="main-chart"></div>
+      </div>
+
+      <!-- Signal Cards -->
+      <div class="signal-grid" id="signal-panel">
+        <!-- Signal cards will be added by JavaScript -->
+      </div>
     </div>
-  </div>
+  </main>
 
   <!-- TradingView Lightweight Charts -->
   <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   
   <script>
-    // Sample data - replace with your actual data fetching logic
+    // Sample data - replace with your actual TwelveData API response
     const volumeProfileData = {
       "AAPL": {
         "POC": 198.58,
@@ -237,8 +387,10 @@
         "Volume_Clusters": [197.08, 197.58, 198.08],
         "Gaps_Above": [203.58, 208.58],
         "Gaps_Below": [193.58, 188.58],
-        "Near_VAL": null,
-        "Near_VAH": null
+        "Near_VAL": false,
+        "Near_VAH": false,
+        "Current_Price": 198.58,
+        "Price_Change_Pct": -1.45
       },
       "MSFT": {
         "POC": 449.45,
@@ -248,8 +400,10 @@
         "Volume_Clusters": [447.95, 448.45, 448.95],
         "Gaps_Above": [454.45, 459.45],
         "Gaps_Below": [444.45, 439.45],
-        "Near_VAL": null,
-        "Near_VAH": null
+        "Near_VAL": false,
+        "Near_VAH": true,
+        "Current_Price": 449.45,
+        "Price_Change_Pct": -4.93
       },
       "TSLA": {
         "POC": 342.83,
@@ -259,8 +413,10 @@
         "Volume_Clusters": [341.33, 341.83, 342.33],
         "Gaps_Above": [347.83, 352.83],
         "Gaps_Below": [337.83, 332.83],
-        "Near_VAL": null,
-        "Near_VAH": null
+        "Near_VAL": false,
+        "Near_VAH": false,
+        "Current_Price": 342.83,
+        "Price_Change_Pct": 5.15
       },
       "NVDA": {
         "POC": 135.17,
@@ -270,8 +426,10 @@
         "Volume_Clusters": [133.67, 134.17, 134.67],
         "Gaps_Above": [140.17, 145.17],
         "Gaps_Below": [130.17, 125.17],
-        "Near_VAL": null,
-        "Near_VAH": null
+        "Near_VAL": true,
+        "Near_VAH": false,
+        "Current_Price": 135.17,
+        "Price_Change_Pct": -5.25
       },
       "AMZN": {
         "POC": 206.06,
@@ -281,8 +439,10 @@
         "Volume_Clusters": [204.56, 205.06, 205.56],
         "Gaps_Above": [211.06, 216.06],
         "Gaps_Below": [201.06, 196.06],
-        "Near_VAL": null,
-        "Near_VAH": null
+        "Near_VAL": false,
+        "Near_VAH": false,
+        "Current_Price": 206.06,
+        "Price_Change_Pct": -3.32
       }
     };
 
@@ -290,7 +450,10 @@
     document.addEventListener('DOMContentLoaded', function() {
       const tickerSelector = document.getElementById('ticker-selector');
       const signalPanel = document.getElementById('signal-panel');
+      const currentTickerElement = document.getElementById('current-ticker');
       const currentPriceElement = document.getElementById('current-price');
+      const priceChangeElement = document.getElementById('price-change');
+      const priceBanner = document.getElementById('price-banner');
       
       // Create ticker buttons
       Object.keys(volumeProfileData).forEach(ticker => {
@@ -316,8 +479,18 @@
           btn.classList.toggle('active', btn.textContent === ticker);
         });
         
-        // Update current price display (simulated)
-        currentPriceElement.textContent = `${ticker}: $${data.POC.toFixed(2)}`;
+        // Update price banner
+        currentTickerElement.textContent = ticker;
+        currentPriceElement.textContent = `$${data.Current_Price.toFixed(2)}`;
+        
+        const isPositive = data.POC_Move >= 0;
+        priceChangeElement.textContent = 
+          `${isPositive ? '+' : ''}${data.POC_Move.toFixed(2)} (${isPositive ? '+' : ''}${data.Price_Change_Pct.toFixed(2)}%)`;
+        
+        priceChangeElement.classList.remove('positive', 'negative');
+        priceChangeElement.classList.add(isPositive ? 'positive' : 'negative');
+        
+        priceBanner.style.backgroundColor = isPositive ? 'var(--positive)' : 'var(--negative)';
         
         // Render chart
         renderChart(ticker, data);
@@ -335,39 +508,58 @@
           height: chartContainer.clientHeight,
           layout: {
             backgroundColor: '#ffffff',
-            textColor: '#333',
+            textColor: '#1e293b',
+            fontSize: 12,
+            fontFamily: 'Inter'
           },
           grid: {
             vertLines: {
-              color: 'rgba(0, 0, 0, 0.05)',
+              color: 'rgba(226, 232, 240, 0.5)',
             },
             horzLines: {
-              color: 'rgba(0, 0, 0, 0.05)',
+              color: 'rgba(226, 232, 240, 0.5)',
             },
           },
           crosshair: {
             mode: LightweightCharts.CrosshairMode.Normal,
+            vertLine: {
+              color: 'rgba(67, 97, 238, 0.3)',
+              labelBackgroundColor: '#4361ee',
+            },
+            horzLine: {
+              color: 'rgba(67, 97, 238, 0.3)',
+              labelBackgroundColor: '#4361ee',
+            },
           },
           rightPriceScale: {
             borderVisible: false,
           },
           timeScale: {
             borderVisible: false,
+            timeVisible: true,
           },
         });
 
-        // In a real app, you would fetch actual candlestick data here
-        // This is just placeholder data for demonstration
-        const candleSeries = chart.addCandlestickSeries();
+        // Candlestick series
+        const candleSeries = chart.addCandlestickSeries({
+          upColor: '#06d6a0',
+          downColor: '#ef476f',
+          borderDownColor: '#ef476f',
+          borderUpColor: '#06d6a0',
+          wickDownColor: '#ef476f',
+          wickUpColor: '#06d6a0',
+        });
+
+        // Generate mock candlestick data
         const now = Math.floor(Date.now() / 1000);
         const candles = [];
+        const basePrice = data.POC;
         
-        for (let i = 10; i >= 0; i--) {
-          const basePrice = data.POC;
-          const open = basePrice + (Math.random() - 0.5) * 5;
-          const close = open + (Math.random() - 0.5) * 3;
-          const high = Math.max(open, close) + Math.random() * 2;
-          const low = Math.min(open, close) - Math.random() * 2;
+        for (let i = 30; i >= 0; i--) {
+          const open = basePrice + (Math.random() - 0.5) * 10;
+          const close = open + (Math.random() - 0.5) * 5;
+          const high = Math.max(open, close) + Math.random() * 3;
+          const low = Math.min(open, close) - Math.random() * 3;
           
           candles.push({
             time: now - i * 86400,
@@ -383,91 +575,142 @@
         // Add POC line
         const pocLine = chart.addPriceLine({
           price: data.POC,
-          color: '#2962FF',
+          color: '#4361ee',
           lineWidth: 2,
-          lineStyle: 2, // Dashed line
+          lineStyle: LightweightCharts.LineStyle.Dashed,
           axisLabelVisible: true,
-          title: 'POC',
+          title: 'Point of Control',
         });
 
         // Add VAL line
         const valLine = chart.addPriceLine({
           price: data.VAL,
-          color: '#ef5350',
+          color: '#ef476f',
           lineWidth: 2,
           axisLabelVisible: true,
-          title: 'VAL',
+          title: 'Value Area Low',
         });
 
         // Add VAH line
         const vahLine = chart.addPriceLine({
           price: data.VAH,
-          color: '#26a69a',
+          color: '#06d6a0',
           lineWidth: 2,
           axisLabelVisible: true,
-          title: 'VAH',
+          title: 'Value Area High',
+        });
+
+        // Add volume clusters
+        data.Volume_Clusters.forEach((price, i) => {
+          chart.addPriceLine({
+            price: price,
+            color: 'rgba(67, 97, 238, 0.2)',
+            lineWidth: 1,
+            axisLabelVisible: false,
+          });
         });
 
         // Add gap areas
         data.Gaps_Above.forEach((gap, i) => {
           chart.addPriceLine({
             price: gap,
-            color: 'rgba(38, 166, 154, 0.3)',
+            color: 'rgba(6, 214, 160, 0.3)',
             lineWidth: 1,
-            lineStyle: 1,
+            lineStyle: LightweightCharts.LineStyle.Dotted,
             axisLabelVisible: true,
-            title: `Gap Above ${i+1}`,
+            title: `Gap Resistance ${i+1}`,
           });
         });
 
         data.Gaps_Below.forEach((gap, i) => {
           chart.addPriceLine({
             price: gap,
-            color: 'rgba(239, 83, 80, 0.3)',
+            color: 'rgba(239, 71, 111, 0.3)',
             lineWidth: 1,
-            lineStyle: 1,
+            lineStyle: LightweightCharts.LineStyle.Dotted,
             axisLabelVisible: true,
-            title: `Gap Below ${i+1}`,
+            title: `Gap Support ${i+1}`,
           });
         });
 
         // Handle window resize
-        window.addEventListener('resize', () => {
-          chart.applyOptions({
-            width: chartContainer.clientWidth,
-            height: chartContainer.clientHeight,
-          });
+        const resizeObserver = new ResizeObserver(entries => {
+          for (let entry of entries) {
+            if (entry.target === chartContainer) {
+              chart.applyOptions({
+                width: entry.contentRect.width,
+                height: entry.contentRect.height
+              });
+            }
+          }
         });
+        
+        resizeObserver.observe(chartContainer);
       }
 
       function updateSignalPanel(ticker, data) {
         signalPanel.innerHTML = `
           <div class="signal-card">
-            <div class="signal-title">Point of Control (POC)</div>
+            <div class="signal-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              Point of Control (POC)
+            </div>
             <div class="signal-value">$${data.POC.toFixed(2)}</div>
-            <div class="signal-move ${data.POC_Move >= 0 ? 'positive' : 'negative'}">
-              ${data.POC_Move >= 0 ? '+' : ''}${data.POC_Move.toFixed(2)} (${(data.POC_Move/data.POC*100).toFixed(2)}%)
+            <div class="signal-change ${data.POC_Move >= 0 ? 'positive' : 'negative'}">
+              ${data.POC_Move >= 0 ? '+' : ''}${data.POC_Move.toFixed(2)} (${data.Price_Change_Pct >= 0 ? '+' : ''}${data.Price_Change_Pct.toFixed(2)}%)
+            </div>
+            <div class="signal-description">
+              The price level with highest trading volume, indicating strong interest
             </div>
           </div>
           
           <div class="signal-card">
-            <div class="signal-title">Value Area Low (VAL)</div>
+            <div class="signal-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18"></path>
+                <path d="M6 6l12 12"></path>
+              </svg>
+              Value Area Low (VAL)
+            </div>
             <div class="signal-value">$${data.VAL.toFixed(2)}</div>
             <div class="${data.Near_VAL ? 'negative' : 'neutral'}">
-              ${data.Near_VAL ? 'Near VAL - Potential Support' : 'Not near VAL'}
+              ${data.Near_VAL ? '⚠️ Near VAL - Potential Support' : 'Not near VAL'}
+            </div>
+            <div class="signal-description">
+              Lower boundary of the value area containing 70% of volume
             </div>
           </div>
           
           <div class="signal-card">
-            <div class="signal-title">Value Area High (VAH)</div>
+            <div class="signal-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 12h16"></path>
+              </svg>
+              Value Area High (VAH)
+            </div>
             <div class="signal-value">$${data.VAH.toFixed(2)}</div>
             <div class="${data.Near_VAH ? 'positive' : 'neutral'}">
-              ${data.Near_VAH ? 'Near VAH - Potential Resistance' : 'Not near VAH'}
+              ${data.Near_VAH ? '⚠️ Near VAH - Potential Resistance' : 'Not near VAH'}
+            </div>
+            <div class="signal-description">
+              Upper boundary of the value area containing 70% of volume
             </div>
           </div>
           
           <div class="signal-card">
-            <div class="signal-title">Volume Clusters</div>
+            <div class="signal-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"></path>
+              </svg>
+              Volume Clusters
+            </div>
+            <div class="signal-description">
+              Price levels with significant trading volume concentration:
+            </div>
             <div class="volume-clusters">
               ${data.Volume_Clusters.map(price => `
                 <div class="cluster-pill">$${price.toFixed(2)}</div>
@@ -476,12 +719,23 @@
           </div>
           
           <div class="signal-card">
-            <div class="signal-title">Price Gaps</div>
-            <div class="gaps-container">
+            <div class="signal-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20"></path>
+                <path d="M2 12h20"></path>
+              </svg>
+              Price Gaps
+            </div>
+            <div class="gaps-section">
               <div class="gaps-title">Potential Support/Resistance Levels</div>
-              <div class="gaps">
+              <div class="gaps-container">
                 <div class="gap-direction">
-                  <div class="gap-direction-title">Gaps Above (Resistance)</div>
+                  <div class="gap-direction-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06d6a0" stroke-width="2">
+                      <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                    Gaps Above (Resistance)
+                  </div>
                   <div class="gap-values">
                     ${data.Gaps_Above.map(price => `
                       <div class="gap-value gap-above">$${price.toFixed(2)}</div>
@@ -489,7 +743,12 @@
                   </div>
                 </div>
                 <div class="gap-direction">
-                  <div class="gap-direction-title">Gaps Below (Support)</div>
+                  <div class="gap-direction-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef476f" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                    Gaps Below (Support)
+                  </div>
                   <div class="gap-values">
                     ${data.Gaps_Below.map(price => `
                       <div class="gap-value gap-below">$${price.toFixed(2)}</div>
