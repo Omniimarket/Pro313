@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volume Profile Signals</title>
+  <style>
+    :root {
+      --primary: #2962FF;
+      --secondary: #0d47a1;
+      --positive: #26a69a;
+      --negative: #ef5350;
+      --neutral: #78909c;
+      --bg: #f5f5f5;
+      --card-bg: #ffffff;
+      --text: #263238;
+      --border: #e0e0e0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--secondary);
+    }
+
+    .ticker-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+    }
+
+    .ticker-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 20px;
+      background-color: var(--card-bg);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    .ticker-btn.active {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .ticker-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .chart-container {
+      position: relative;
+      height: 500px;
+      margin-bottom: 30px;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    #main-chart {
+      width: 100%;
+      height: 100%;
+    }
+
+    .signal-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .signal-card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+
+    .signal-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .signal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--secondary);
+    }
+
+    .signal-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .positive {
+      color: var(--positive);
+    }
+
+    .negative {
+      color: var(--negative);
+    }
+
+    .volume-clusters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .cluster-pill {
+      background-color: var(--primary);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+    }
+
+    .gaps-container {
+      margin-top: 15px;
+    }
+
+    .gaps-title {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .gaps {
+      display: flex;
+      gap: 15px;
+    }
+
+    .gap-direction {
+      flex: 1;
+    }
+
+    .gap-direction-title {
+      font-size: 0.9rem;
+      margin-bottom: 5px;
+      color: var(--neutral);
+    }
+
+    .gap-values {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .gap-value {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .gap-above {
+      background-color: rgba(38, 166, 154, 0.1);
+      color: var(--positive);
+    }
+
+    .gap-below {
+      background-color: rgba(239, 83, 80, 0.1);
+      color: var(--negative);
+    }
+
+    @media (max-width: 768px) {
+      .signal-panel {
+        grid-template-columns: 1fr;
+      }
+      
+      .chart-container {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Volume Profile Signals</h1>
+      <div class="current-price" id="current-price">Loading...</div>
+    </header>
+
+    <div class="ticker-selector" id="ticker-selector">
+      <!-- Ticker buttons will be added here by JavaScript -->
+    </div>
+
+    <div class="chart-container">
+      <div id="main-chart"></div>
+    </div>
+
+    <div class="signal-panel" id="signal-panel">
+      <!-- Signal cards will be added here by JavaScript -->
+    </div>
+  </div>
+
+  <!-- TradingView Lightweight Charts -->
+  <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+  
+  <script>
+    // Sample data - replace with your actual data fetching logic
+    const volumeProfileData = {
+      "AAPL": {
+        "POC": 198.58,
+        "POC_Move": -2.92,
+        "VAL": 195.64,
+        "VAH": 212.56,
+        "Volume_Clusters": [197.08, 197.58, 198.08],
+        "Gaps_Above": [203.58, 208.58],
+        "Gaps_Below": [193.58, 188.58],
+        "Near_VAL": null,
+        "Near_VAH": null
+      },
+      "MSFT": {
+        "POC": 449.45,
+        "POC_Move": -23.3,
+        "VAL": 434.26,
+        "VAH": 477.92,
+        "Volume_Clusters": [447.95, 448.45, 448.95],
+        "Gaps_Above": [454.45, 459.45],
+        "Gaps_Below": [444.45, 439.45],
+        "Near_VAL": null,
+        "Near_VAH": null
+      },
+      "TSLA": {
+        "POC": 342.83,
+        "POC_Move": 16.77,
+        "VAL": 277.17,
+        "VAH": 361.07,
+        "Volume_Clusters": [341.33, 341.83, 342.33],
+        "Gaps_Above": [347.83, 352.83],
+        "Gaps_Below": [337.83, 332.83],
+        "Near_VAL": null,
+        "Near_VAH": null
+      },
+      "NVDA": {
+        "POC": 135.17,
+        "POC_Move": -7.5,
+        "VAL": 114.2,
+        "VAH": 144.34,
+        "Volume_Clusters": [133.67, 134.17, 134.67],
+        "Gaps_Above": [140.17, 145.17],
+        "Gaps_Below": [130.17, 125.17],
+        "Near_VAL": null,
+        "Near_VAH": null
+      },
+      "AMZN": {
+        "POC": 206.06,
+        "POC_Move": -7.07,
+        "VAL": 185.69,
+        "VAH": 216.93,
+        "Volume_Clusters": [204.56, 205.06, 205.56],
+        "Gaps_Above": [211.06, 216.06],
+        "Gaps_Below": [201.06, 196.06],
+        "Near_VAL": null,
+        "Near_VAH": null
+      }
+    };
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+      const tickerSelector = document.getElementById('ticker-selector');
+      const signalPanel = document.getElementById('signal-panel');
+      const currentPriceElement = document.getElementById('current-price');
+      
+      // Create ticker buttons
+      Object.keys(volumeProfileData).forEach(ticker => {
+        const btn = document.createElement('button');
+        btn.className = 'ticker-btn';
+        btn.textContent = ticker;
+        btn.addEventListener('click', () => loadTickerData(ticker));
+        tickerSelector.appendChild(btn);
+      });
+
+      // Load first ticker by default
+      if (Object.keys(volumeProfileData).length > 0) {
+        const firstTicker = Object.keys(volumeProfileData)[0];
+        loadTickerData(firstTicker);
+        document.querySelector('.ticker-btn').classList.add('active');
+      }
+
+      function loadTickerData(ticker) {
+        const data = volumeProfileData[ticker];
+        
+        // Update active button
+        document.querySelectorAll('.ticker-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.textContent === ticker);
+        });
+        
+        // Update current price display (simulated)
+        currentPriceElement.textContent = `${ticker}: $${data.POC.toFixed(2)}`;
+        
+        // Render chart
+        renderChart(ticker, data);
+        
+        // Update signal panel
+        updateSignalPanel(ticker, data);
+      }
+
+      function renderChart(ticker, data) {
+        const chartContainer = document.getElementById('main-chart');
+        chartContainer.innerHTML = ''; // Clear previous chart
+        
+        const chart = LightweightCharts.createChart(chartContainer, {
+          width: chartContainer.clientWidth,
+          height: chartContainer.clientHeight,
+          layout: {
+            backgroundColor: '#ffffff',
+            textColor: '#333',
+          },
+          grid: {
+            vertLines: {
+              color: 'rgba(0, 0, 0, 0.05)',
+            },
+            horzLines: {
+              color: 'rgba(0, 0, 0, 0.05)',
+            },
+          },
+          crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+          },
+          rightPriceScale: {
+            borderVisible: false,
+          },
+          timeScale: {
+            borderVisible: false,
+          },
+        });
+
+        // In a real app, you would fetch actual candlestick data here
+        // This is just placeholder data for demonstration
+        const candleSeries = chart.addCandlestickSeries();
+        const now = Math.floor(Date.now() / 1000);
+        const candles = [];
+        
+        for (let i = 10; i >= 0; i--) {
+          const basePrice = data.POC;
+          const open = basePrice + (Math.random() - 0.5) * 5;
+          const close = open + (Math.random() - 0.5) * 3;
+          const high = Math.max(open, close) + Math.random() * 2;
+          const low = Math.min(open, close) - Math.random() * 2;
+          
+          candles.push({
+            time: now - i * 86400,
+            open: open,
+            high: high,
+            low: low,
+            close: close,
+          });
+        }
+        
+        candleSeries.setData(candles);
+
+        // Add POC line
+        const pocLine = chart.addPriceLine({
+          price: data.POC,
+          color: '#2962FF',
+          lineWidth: 2,
+          lineStyle: 2, // Dashed line
+          axisLabelVisible: true,
+          title: 'POC',
+        });
+
+        // Add VAL line
+        const valLine = chart.addPriceLine({
+          price: data.VAL,
+          color: '#ef5350',
+          lineWidth: 2,
+          axisLabelVisible: true,
+          title: 'VAL',
+        });
+
+        // Add VAH line
+        const vahLine = chart.addPriceLine({
+          price: data.VAH,
+          color: '#26a69a',
+          lineWidth: 2,
+          axisLabelVisible: true,
+          title: 'VAH',
+        });
+
+        // Add gap areas
+        data.Gaps_Above.forEach((gap, i) => {
+          chart.addPriceLine({
+            price: gap,
+            color: 'rgba(38, 166, 154, 0.3)',
+            lineWidth: 1,
+            lineStyle: 1,
+            axisLabelVisible: true,
+            title: `Gap Above ${i+1}`,
+          });
+        });
+
+        data.Gaps_Below.forEach((gap, i) => {
+          chart.addPriceLine({
+            price: gap,
+            color: 'rgba(239, 83, 80, 0.3)',
+            lineWidth: 1,
+            lineStyle: 1,
+            axisLabelVisible: true,
+            title: `Gap Below ${i+1}`,
+          });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+          chart.applyOptions({
+            width: chartContainer.clientWidth,
+            height: chartContainer.clientHeight,
+          });
+        });
+      }
+
+      function updateSignalPanel(ticker, data) {
+        signalPanel.innerHTML = `
+          <div class="signal-card">
+            <div class="signal-title">Point of Control (POC)</div>
+            <div class="signal-value">$${data.POC.toFixed(2)}</div>
+            <div class="signal-move ${data.POC_Move >= 0 ? 'positive' : 'negative'}">
+              ${data.POC_Move >= 0 ? '+' : ''}${data.POC_Move.toFixed(2)} (${(data.POC_Move/data.POC*100).toFixed(2)}%)
+            </div>
+          </div>
+          
+          <div class="signal-card">
+            <div class="signal-title">Value Area Low (VAL)</div>
+            <div class="signal-value">$${data.VAL.toFixed(2)}</div>
+            <div class="${data.Near_VAL ? 'negative' : 'neutral'}">
+              ${data.Near_VAL ? 'Near VAL - Potential Support' : 'Not near VAL'}
+            </div>
+          </div>
+          
+          <div class="signal-card">
+            <div class="signal-title">Value Area High (VAH)</div>
+            <div class="signal-value">$${data.VAH.toFixed(2)}</div>
+            <div class="${data.Near_VAH ? 'positive' : 'neutral'}">
+              ${data.Near_VAH ? 'Near VAH - Potential Resistance' : 'Not near VAH'}
+            </div>
+          </div>
+          
+          <div class="signal-card">
+            <div class="signal-title">Volume Clusters</div>
+            <div class="volume-clusters">
+              ${data.Volume_Clusters.map(price => `
+                <div class="cluster-pill">$${price.toFixed(2)}</div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div class="signal-card">
+            <div class="signal-title">Price Gaps</div>
+            <div class="gaps-container">
+              <div class="gaps-title">Potential Support/Resistance Levels</div>
+              <div class="gaps">
+                <div class="gap-direction">
+                  <div class="gap-direction-title">Gaps Above (Resistance)</div>
+                  <div class="gap-values">
+                    ${data.Gaps_Above.map(price => `
+                      <div class="gap-value gap-above">$${price.toFixed(2)}</div>
+                    `).join('')}
+                  </div>
+                </div>
+                <div class="gap-direction">
+                  <div class="gap-direction-title">Gaps Below (Support)</div>
+                  <div class="gap-values">
+                    ${data.Gaps_Below.map(price => `
+                      <div class="gap-value gap-below">$${price.toFixed(2)}</div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
