@@ -3,342 +3,193 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarketPulse - Volume Profile</title>
+  <title>MarketPulse - Working Volume Profile</title>
   <style>
+    /* SIMPLIFIED STYLES */
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f5f7fa;
-      color: #333;
+      margin: 20px;
+      background: #f5f7fa;
     }
-    
-    #ticker-buttons {
-      margin: 20px 0;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    
+    #ticker-buttons { margin: 20px 0; }
     .ticker-btn {
       padding: 10px 15px;
-      background-color: #4361ee;
+      background: #4361ee;
       color: white;
       border: none;
       border-radius: 5px;
+      margin-right: 10px;
       cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.2s;
     }
-    
-    .ticker-btn:hover {
-      background-color: #3a56d4;
-    }
-    
-    .ticker-btn.active {
-      background-color: #2f4ab3;
-    }
-    
     #chart-container {
       width: 100%;
       height: 500px;
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      background: white;
+      border: 1px solid #ddd;
     }
-    
     #signals {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    .signal-title {
-      font-size: 1.5rem;
-      margin-top: 0;
-      color: #4361ee;
-    }
-    
-    .signal-value {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    
-    .positive {
-      color: #26a69a;
-    }
-    
-    .negative {
-      color: #ef5350;
-    }
-    
-    .volume-clusters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 15px 0;
-    }
-    
-    .cluster-pill {
-      background-color: #4361ee;
-      color: white;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-    
-    .gaps-container {
-      display: flex;
-      gap: 20px;
       margin-top: 20px;
+      padding: 15px;
+      background: white;
+      border: 1px solid #ddd;
     }
-    
-    .gap-direction {
-      flex: 1;
-    }
-    
-    .gap-values {
-      margin-top: 10px;
-    }
-    
-    .gap-value {
-      padding: 5px 10px;
-      margin-bottom: 5px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-    }
-    
-    .gap-above {
-      background-color: rgba(38, 166, 154, 0.1);
-      color: #26a69a;
-    }
-    
-    .gap-below {
-      background-color: rgba(239, 83, 80, 0.1);
-      color: #ef5350;
+    .cluster-pill {
+      display: inline-block;
+      background: #4361ee;
+      color: white;
+      padding: 3px 8px;
+      margin: 3px;
+      border-radius: 3px;
+      font-size: 0.9em;
     }
   </style>
 </head>
 <body>
+  <h1>MarketPulse Volume Profile</h1>
   <div id="ticker-buttons"></div>
   <div id="chart-container"></div>
   <div id="signals"></div>
+  <div id="debug" style="color:red; margin-top:20px;"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.min.js"></script>
+  <!-- Using specific working version of Lightweight Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   
   <script>
-    // Complete volume profile data with mock candlestick data
-    const volumeProfileData = {
+    // DEBUGGING HELPER
+    function debugLog(message) {
+      console.log(message);
+      document.getElementById('debug').innerHTML += message + '<br>';
+    }
+
+    // SIMPLIFIED DATA
+    const stocks = {
       "AAPL": {
         "POC": 198.58,
-        "POC_Move": -2.92,
         "VAL": 195.64,
         "VAH": 212.56,
-        "Volume_Clusters": [197.08, 197.58, 198.08],
-        "Gaps_Above": [203.58, 208.58],
-        "Gaps_Below": [193.58, 188.58],
-        "Current_Price": 198.58,
-        "Price_Change_Pct": -1.45,
         "candles": [
-          { time: "2023-05-01", open: 195.50, high: 199.25, low: 194.75, close: 198.20 },
-          { time: "2023-05-02", open: 198.50, high: 200.75, low: 197.25, close: 199.80 },
-          { time: "2023-05-03", open: 199.50, high: 202.25, low: 198.50, close: 200.50 },
-          { time: "2023-05-04", open: 200.75, high: 203.00, low: 199.25, close: 201.75 },
-          { time: "2023-05-05", open: 201.50, high: 204.50, low: 200.25, close: 203.25 }
+          { time: "2023-01-01", open: 195, high: 199, low: 194, close: 198 },
+          { time: "2023-01-02", open: 198, high: 200, low: 197, close: 199 },
+          { time: "2023-01-03", open: 199, high: 202, low: 198, close: 200 }
         ]
       },
       "NVDA": {
         "POC": 135.17,
-        "POC_Move": -7.5,
-        "VAL": 114.2,
+        "VAL": 114.20,
         "VAH": 144.34,
-        "Volume_Clusters": [133.67, 134.17, 134.67],
-        "Gaps_Above": [140.17, 145.17],
-        "Gaps_Below": [130.17, 125.17],
-        "Current_Price": 135.17,
-        "Price_Change_Pct": -5.25,
         "candles": [
-          { time: "2023-05-01", open: 130.50, high: 135.25, low: 129.75, close: 134.20 },
-          { time: "2023-05-02", open: 134.50, high: 137.75, low: 133.25, close: 136.80 },
-          { time: "2023-05-03", open: 136.50, high: 139.25, low: 135.50, close: 138.50 },
-          { time: "2023-05-04", open: 138.75, high: 141.00, low: 137.25, close: 140.75 },
-          { time: "2023-05-05", open: 140.50, high: 143.50, low: 139.25, close: 142.25 }
-        ]
-      },
-      "TSLA": {
-        "POC": 342.83,
-        "POC_Move": 16.77,
-        "VAL": 277.17,
-        "VAH": 361.07,
-        "Volume_Clusters": [341.33, 341.83, 342.33],
-        "Gaps_Above": [347.83, 352.83],
-        "Gaps_Below": [337.83, 332.83],
-        "Current_Price": 342.83,
-        "Price_Change_Pct": 5.15,
-        "candles": [
-          { time: "2023-05-01", open: 335.50, high: 345.25, low: 334.75, close: 342.20 },
-          { time: "2023-05-02", open: 342.50, high: 347.75, low: 341.25, close: 345.80 },
-          { time: "2023-05-03", open: 345.50, high: 350.25, low: 344.50, close: 348.50 },
-          { time: "2023-05-04", open: 348.75, high: 353.00, low: 347.25, close: 351.75 },
-          { time: "2023-05-05", open: 351.50, high: 356.50, low: 349.25, close: 354.25 }
+          { time: "2023-01-01", open: 130, high: 135, low: 129, close: 134 },
+          { time: "2023-01-02", open: 134, high: 137, low: 133, close: 136 },
+          { time: "2023-01-03", open: 136, high: 139, low: 135, close: 138 }
         ]
       }
     };
 
-    // Wait for page to fully load
-    window.addEventListener('load', function() {
-      const tickerButtons = document.getElementById('ticker-buttons');
-      const chartContainer = document.getElementById('chart-container');
-      const signalsDiv = document.getElementById('signals');
+    // INITIALIZE WHEN READY
+    document.addEventListener('DOMContentLoaded', function() {
+      debugLog('DOM fully loaded');
       
-      // Create ticker buttons
-      Object.keys(volumeProfileData).forEach(ticker => {
-        const btn = document.createElement('button');
-        btn.className = 'ticker-btn';
-        btn.textContent = ticker;
-        btn.addEventListener('click', () => updateChart(ticker));
-        tickerButtons.appendChild(btn);
-      });
-      
-      // Initialize with first ticker
-      updateChart(Object.keys(volumeProfileData)[0]);
-      
-      // Set first button as active
-      document.querySelector('.ticker-btn').classList.add('active');
+      try {
+        // 1. CREATE BUTTONS
+        const buttonsDiv = document.getElementById('ticker-buttons');
+        if (!buttonsDiv) throw new Error('Missing ticker-buttons div');
+        
+        Object.keys(stocks).forEach(ticker => {
+          const btn = document.createElement('button');
+          btn.className = 'ticker-btn';
+          btn.textContent = ticker;
+          btn.onclick = () => loadChart(ticker);
+          buttonsDiv.appendChild(btn);
+        });
+        debugLog('Buttons created');
+
+        // 2. LOAD FIRST CHART
+        loadChart(Object.keys(stocks)[0]);
+        
+      } catch (error) {
+        debugLog('Initialization error: ' + error.message);
+      }
     });
 
-    function updateChart(ticker) {
-      const data = volumeProfileData[ticker];
+    // CHART LOADING FUNCTION
+    function loadChart(ticker) {
+      debugLog(`Loading chart for ${ticker}`);
       
-      // Update active button
-      document.querySelectorAll('.ticker-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.textContent === ticker) btn.classList.add('active');
-      });
-      
-      // Clear and recreate chart
-      chartContainer.innerHTML = '';
-      const chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-          backgroundColor: '#ffffff',
-          textColor: '#333',
-        },
-        grid: {
-          vertLines: { color: 'rgba(0, 0, 0, 0.05)' },
-          horzLines: { color: 'rgba(0, 0, 0, 0.05)' },
+      try {
+        const data = stocks[ticker];
+        if (!data) throw new Error(`No data for ${ticker}`);
+        
+        const chartContainer = document.getElementById('chart-container');
+        const signalsDiv = document.getElementById('signals');
+        
+        if (!chartContainer || !signalsDiv) {
+          throw new Error('Missing chart container or signals div');
         }
-      });
-      
-      // Add candle series with real data
-      const candleSeries = chart.addCandlestickSeries({
-        upColor: '#26a69a',
-        downColor: '#ef5350',
-        borderDownColor: '#ef5350',
-        borderUpColor: '#26a69a',
-        wickDownColor: '#ef5350',
-        wickUpColor: '#26a69a',
-      });
-      
-      candleSeries.setData(data.candles);
-      
-      // Add volume profile lines
-      candleSeries.createPriceLine({
-        price: data.POC,
-        color: '#4361ee',
-        lineWidth: 2,
-        lineStyle: 2, // Dashed
-        title: 'POC'
-      });
-      
-      candleSeries.createPriceLine({
-        price: data.VAL,
-        color: '#ef5350',
-        lineWidth: 2,
-        title: 'VAL'
-      });
-      
-      candleSeries.createPriceLine({
-        price: data.VAH,
-        color: '#26a69a',
-        lineWidth: 2,
-        title: 'VAH'
-      });
-      
-      // Add gap areas
-      data.Gaps_Above.forEach(price => {
-        candleSeries.createPriceLine({
-          price: price,
-          color: 'rgba(38, 166, 154, 0.3)',
-          lineWidth: 1,
-          lineStyle: 1, // Dotted
-          title: 'Gap Above'
-        });
-      });
-      
-      data.Gaps_Below.forEach(price => {
-        candleSeries.createPriceLine({
-          price: price,
-          color: 'rgba(239, 83, 80, 0.3)',
-          lineWidth: 1,
-          lineStyle: 1, // Dotted
-          title: 'Gap Below'
-        });
-      });
-      
-      // Update signals panel
-      signalsDiv.innerHTML = `
-        <h2 class="signal-title">${ticker} Volume Profile</h2>
-        <div class="signal-value">
-          Current Price: $${data.Current_Price.toFixed(2)}
-          <span class="${data.POC_Move >= 0 ? 'positive' : 'negative'}">
-            (${data.POC_Move >= 0 ? '+' : ''}${data.POC_Move.toFixed(2)}, ${data.Price_Change_Pct >= 0 ? '+' : ''}${data.Price_Change_Pct.toFixed(2)}%)
-          </span>
-        </div>
-        
-        <div class="signal-value">
-          POC: $${data.POC.toFixed(2)} | VAL: $${data.VAL.toFixed(2)} | VAH: $${data.VAH.toFixed(2)}
-        </div>
-        
-        <div class="volume-clusters">
-          <strong>Volume Clusters:</strong>
-          ${data.Volume_Clusters.map(price => `
-            <div class="cluster-pill">$${price.toFixed(2)}</div>
-          `).join('')}
-        </div>
-        
-        <div class="gaps-container">
-          <div class="gap-direction">
-            <strong>Gaps Above (Resistance):</strong>
-            <div class="gap-values">
-              ${data.Gaps_Above.map(price => `
-                <div class="gap-value gap-above">$${price.toFixed(2)}</div>
-              `).join('')}
-            </div>
-          </div>
-          
-          <div class="gap-direction">
-            <strong>Gaps Below (Support):</strong>
-            <div class="gap-values">
-              ${data.Gaps_Below.map(price => `
-                <div class="gap-value gap-below">$${price.toFixed(2)}</div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `;
-      
-      // Handle window resize
-      new ResizeObserver(() => {
-        chart.applyOptions({
+
+        // CLEAR PREVIOUS CHART
+        chartContainer.innerHTML = '';
+        debugLog('Chart container cleared');
+
+        // CREATE NEW CHART
+        const chart = LightweightCharts.createChart(chartContainer, {
           width: chartContainer.clientWidth,
-          height: chartContainer.clientHeight
+          height: chartContainer.clientHeight,
+          layout: {
+            backgroundColor: '#FFFFFF',
+            textColor: '#191919',
+          },
+          grid: {
+            vertLines: { color: '#f0f3fa' },
+            horzLines: { color: '#f0f3fa' },
+          }
         });
-      }).observe(chartContainer);
+        debugLog('Chart instance created');
+
+        // ADD CANDLE SERIES
+        const candleSeries = chart.addCandlestickSeries({
+          upColor: '#26a69a',
+          downColor: '#ef5350',
+          borderDownColor: '#ef5350',
+          borderUpColor: '#26a69a',
+          wickDownColor: '#ef5350',
+          wickUpColor: '#26a69a',
+        });
+        debugLog('Candle series added');
+
+        // SET DATA
+        candleSeries.setData(data.candles);
+        debugLog('Candle data set');
+
+        // ADD POC LINE
+        candleSeries.createPriceLine({
+          price: data.POC,
+          color: '#2962FF',
+          lineWidth: 2,
+          lineStyle: 2, // Dashed
+          title: 'POC',
+        });
+        debugLog('POC line added');
+
+        // UPDATE SIGNALS PANEL
+        signalsDiv.innerHTML = `
+          <h2>${ticker} Signals</h2>
+          <p><strong>POC:</strong> $${data.POC.toFixed(2)}</p>
+          <p><strong>VAL:</strong> $${data.VAL.toFixed(2)}</p>
+          <p><strong>VAH:</strong> $${data.VAH.toFixed(2)}</p>
+        `;
+        debugLog('Signals panel updated');
+
+        // WINDOW RESIZE HANDLER
+        window.addEventListener('resize', () => {
+          chart.applyOptions({
+            width: chartContainer.clientWidth,
+            height: chartContainer.clientHeight
+          });
+        });
+
+      } catch (error) {
+        debugLog('Chart loading error: ' + error.message);
+      }
     }
   </script>
 </body>
