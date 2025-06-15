@@ -130,7 +130,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.min.js"></script>
   
   <script>
-    // Complete volume profile data
+    // Complete volume profile data with mock candlestick data
     const volumeProfileData = {
       "AAPL": {
         "POC": 198.58,
@@ -141,7 +141,14 @@
         "Gaps_Above": [203.58, 208.58],
         "Gaps_Below": [193.58, 188.58],
         "Current_Price": 198.58,
-        "Price_Change_Pct": -1.45
+        "Price_Change_Pct": -1.45,
+        "candles": [
+          { time: "2023-05-01", open: 195.50, high: 199.25, low: 194.75, close: 198.20 },
+          { time: "2023-05-02", open: 198.50, high: 200.75, low: 197.25, close: 199.80 },
+          { time: "2023-05-03", open: 199.50, high: 202.25, low: 198.50, close: 200.50 },
+          { time: "2023-05-04", open: 200.75, high: 203.00, low: 199.25, close: 201.75 },
+          { time: "2023-05-05", open: 201.50, high: 204.50, low: 200.25, close: 203.25 }
+        ]
       },
       "NVDA": {
         "POC": 135.17,
@@ -152,7 +159,14 @@
         "Gaps_Above": [140.17, 145.17],
         "Gaps_Below": [130.17, 125.17],
         "Current_Price": 135.17,
-        "Price_Change_Pct": -5.25
+        "Price_Change_Pct": -5.25,
+        "candles": [
+          { time: "2023-05-01", open: 130.50, high: 135.25, low: 129.75, close: 134.20 },
+          { time: "2023-05-02", open: 134.50, high: 137.75, low: 133.25, close: 136.80 },
+          { time: "2023-05-03", open: 136.50, high: 139.25, low: 135.50, close: 138.50 },
+          { time: "2023-05-04", open: 138.75, high: 141.00, low: 137.25, close: 140.75 },
+          { time: "2023-05-05", open: 140.50, high: 143.50, low: 139.25, close: 142.25 }
+        ]
       },
       "TSLA": {
         "POC": 342.83,
@@ -163,7 +177,14 @@
         "Gaps_Above": [347.83, 352.83],
         "Gaps_Below": [337.83, 332.83],
         "Current_Price": 342.83,
-        "Price_Change_Pct": 5.15
+        "Price_Change_Pct": 5.15,
+        "candles": [
+          { time: "2023-05-01", open: 335.50, high: 345.25, low: 334.75, close: 342.20 },
+          { time: "2023-05-02", open: 342.50, high: 347.75, low: 341.25, close: 345.80 },
+          { time: "2023-05-03", open: 345.50, high: 350.25, low: 344.50, close: 348.50 },
+          { time: "2023-05-04", open: 348.75, high: 353.00, low: 347.25, close: 351.75 },
+          { time: "2023-05-05", open: 351.50, high: 356.50, low: 349.25, close: 354.25 }
+        ]
       }
     };
 
@@ -213,7 +234,7 @@
         }
       });
       
-      // Add candle series with mock data
+      // Add candle series with real data
       const candleSeries = chart.addCandlestickSeries({
         upColor: '#26a69a',
         downColor: '#ef5350',
@@ -223,21 +244,7 @@
         wickUpColor: '#26a69a',
       });
       
-      const now = Math.floor(Date.now() / 1000);
-      const candles = [];
-      for (let i = 30; i >= 0; i--) {
-        const base = data.POC;
-        const open = base + (Math.random() - 0.5) * 10;
-        const close = open + (Math.random() - 0.5) * 5;
-        candles.push({
-          time: now - i * 86400,
-          open: open,
-          high: Math.max(open, close) + Math.random() * 3,
-          low: Math.min(open, close) - Math.random() * 3,
-          close: close
-        });
-      }
-      candleSeries.setData(candles);
+      candleSeries.setData(data.candles);
       
       // Add volume profile lines
       candleSeries.createPriceLine({
