@@ -1,224 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarketPulse | Volume Profile Analysis</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>MarketPulse</title>
   <style>
-    /* [Keep all your existing CSS styles] */
+    /* SIMPLE STYLES - NO EXTERNAL FILES NEEDED */
+    body { font-family: Arial; margin: 20px; }
+    #ticker-buttons { margin: 20px 0; }
+    button { padding: 10px; margin-right: 10px; }
+    #chart { width: 100%; height: 400px; border: 1px solid #ddd; }
   </style>
 </head>
 <body>
-  <!-- [Keep all your existing HTML structure] -->
 
-  <!-- Updated Lightweight Charts script -->
-  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.min.js"></script>
+<!-- ONLY 3 ESSENTIAL ELEMENTS -->
+<div id="ticker-buttons"></div>
+<div id="chart"></div>
+<div id="signals"></div>
+
+<!-- 1. LOAD CHART LIBRARY -->
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.min.js"></script>
+
+<!-- 2. SIMPLE WORKING SCRIPT -->
+<script>
+// STEP 1: WAIT FOR PAGE TO LOAD
+window.addEventListener('load', function() {
+
+  // STEP 2: CHECK ELEMENTS EXIST
+  const buttonsDiv = document.getElementById('ticker-buttons');
+  const chartDiv = document.getElementById('chart');
   
-  <script>
-    // Sample data - replace with your actual API data
-    const volumeProfileData = {
-      "AAPL": {
-        "POC": 198.58,
-        "POC_Move": -2.92,
-        "VAL": 195.64,
-        "VAH": 212.56,
-        "Volume_Clusters": [197.08, 197.58, 198.08],
-        "Gaps_Above": [203.58, 208.58],
-        "Gaps_Below": [193.58, 188.58],
-        "Near_VAL": false,
-        "Near_VAH": false,
-        "Current_Price": 198.58,
-        "Price_Change_Pct": -1.45
-      },
-      "NVDA": {
-        "POC": 135.17,
-        "POC_Move": -7.5,
-        "VAL": 114.2,
-        "VAH": 144.34,
-        "Volume_Clusters": [133.67, 134.17, 134.67],
-        "Gaps_Above": [140.17, 145.17],
-        "Gaps_Below": [130.17, 125.17],
-        "Near_VAL": true,
-        "Near_VAH": false,
-        "Current_Price": 135.17,
-        "Price_Change_Pct": -5.25
-      }
-    };
+  if (!buttonsDiv || !chartDiv) {
+    alert("Error: Missing required elements!");
+    return;
+  }
 
-    // Initialize the app
-    document.addEventListener('DOMContentLoaded', function() {
-      const tickerSelector = document.getElementById('ticker-selector');
-      const signalPanel = document.getElementById('signal-panel');
-      const currentTickerElement = document.getElementById('current-ticker');
-      const currentPriceElement = document.getElementById('current-price');
-      const priceChangeElement = document.getElementById('price-change');
-      const priceBanner = document.getElementById('price-banner');
-      
-      // Create ticker buttons
-      Object.keys(volumeProfileData).forEach(ticker => {
-        const btn = document.createElement('button');
-        btn.className = 'ticker-btn';
-        btn.textContent = ticker;
-        btn.addEventListener('click', () => loadTickerData(ticker));
-        tickerSelector.appendChild(btn);
-      });
+  // STEP 3: HARDCODED DATA
+  const stocks = {
+    "AAPL": { price: 190.50, change: -1.2 },
+    "NVDA": { price: 450.75, change: +5.3 }
+  };
 
-      // Load first ticker by default
-      if (Object.keys(volumeProfileData).length > 0) {
-        const firstTicker = Object.keys(volumeProfileData)[0];
-        loadTickerData(firstTicker);
-        document.querySelector('.ticker-btn').classList.add('active');
-      }
+  // STEP 4: CREATE BUTTONS
+  Object.keys(stocks).forEach(ticker => {
+    const btn = document.createElement('button');
+    btn.textContent = ticker;
+    btn.onclick = () => updateChart(ticker);
+    buttonsDiv.appendChild(btn);
+  });
 
-      async function loadTickerData(ticker) {
-        try {
-          const data = volumeProfileData[ticker];
-          if (!data) return;
-          
-          // Update UI
-          document.querySelectorAll('.ticker-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.textContent === ticker);
-          });
-          
-          currentTickerElement.textContent = ticker;
-          currentPriceElement.textContent = `$${data.Current_Price.toFixed(2)}`;
-          
-          const isPositive = data.POC_Move >= 0;
-          priceChangeElement.textContent = 
-            `${isPositive ? '+' : ''}${data.POC_Move.toFixed(2)} (${isPositive ? '+' : ''}${data.Price_Change_Pct.toFixed(2)}%)`;
-          
-          priceChangeElement.className = 'price-change ' + (isPositive ? 'positive' : 'negative');
-          priceBanner.style.backgroundColor = isPositive ? 'var(--positive)' : 'var(--negative)';
-          
-          // Render chart
-          await renderChart(ticker, data);
-          
-          // Update signal panel
-          updateSignalPanel(ticker, data);
-        } catch (error) {
-          console.error('Error loading ticker data:', error);
-          document.getElementById('main-chart').innerHTML = `
-            <div class="chart-error">
-              Failed to load chart data. Please try again.
-            </div>
-          `;
-        }
-      }
+  // STEP 5: INITIALIZE CHART
+  let chart = LightweightCharts.createChart(chartDiv, {
+    width: chartDiv.clientWidth,
+    height: chartDiv.clientHeight
+  });
+  let lineSeries = chart.addLineSeries();
 
-      async function renderChart(ticker, data) {
-        try {
-          const chartContainer = document.getElementById('main-chart');
-          chartContainer.innerHTML = '';
-          
-          // Create chart instance
-          const chart = LightweightCharts.createChart(chartContainer, {
-            width: chartContainer.clientWidth,
-            height: chartContainer.clientHeight,
-            layout: {
-              backgroundColor: '#ffffff',
-              textColor: '#1e293b',
-              fontSize: 12,
-              fontFamily: 'Inter'
-            },
-            grid: {
-              vertLines: { color: 'rgba(226, 232, 240, 0.5)' },
-              horzLines: { color: 'rgba(226, 232, 240, 0.5)' },
-            },
-            crosshair: {
-              mode: LightweightCharts.CrosshairMode.Normal,
-            },
-            rightPriceScale: { borderVisible: false },
-            timeScale: { borderVisible: false },
-          });
+  // STEP 6: BASIC CHART UPDATE
+  function updateChart(ticker) {
+    lineSeries.setData([
+      { time: '2023-01-01', value: stocks[ticker].price - 10 },
+      { time: '2023-01-02', value: stocks[ticker].price },
+      { time: '2023-01-03', value: stocks[ticker].price + 10 }
+    ]);
+    document.getElementById('signals').innerHTML = `
+      <h3>${ticker}</h3>
+      <p>Price: $${stocks[ticker].price.toFixed(2)}</p>
+      <p>Change: ${stocks[ticker].change > 0 ? '+' : ''}${stocks[ticker].change}%</p>
+    `;
+  }
 
-          // Add candlestick series
-          const candleSeries = chart.addCandlestickSeries({
-            upColor: '#06d6a0',
-            downColor: '#ef476f',
-            borderDownColor: '#ef476f',
-            borderUpColor: '#06d6a0',
-            wickDownColor: '#ef476f',
-            wickUpColor: '#06d6a0',
-          });
+  // STEP 7: LOAD FIRST STOCK
+  updateChart(Object.keys(stocks)[0]);
+});
+</script>
 
-          // Generate mock data (replace with real API data)
-          const now = Math.floor(Date.now() / 1000);
-          const candles = [];
-          const basePrice = data.POC;
-          
-          for (let i = 30; i >= 0; i--) {
-            const open = basePrice + (Math.random() - 0.5) * 10;
-            const close = open + (Math.random() - 0.5) * 5;
-            const high = Math.max(open, close) + Math.random() * 3;
-            const low = Math.min(open, close) - Math.random() * 3;
-            
-            candles.push({
-              time: now - i * 86400,
-              open: open,
-              high: high,
-              low: low,
-              close: close,
-            });
-          }
-          
-          candleSeries.setData(candles);
-
-          // Add price lines to the SERIES (not chart)
-          candleSeries.createPriceLine({
-            price: data.POC,
-            color: '#4361ee',
-            lineWidth: 2,
-            lineStyle: LightweightCharts.LineStyle.Dashed,
-            axisLabelVisible: true,
-            title: 'POC',
-          });
-
-          candleSeries.createPriceLine({
-            price: data.VAL,
-            color: '#ef476f',
-            lineWidth: 2,
-            axisLabelVisible: true,
-            title: 'VAL',
-          });
-
-          candleSeries.createPriceLine({
-            price: data.VAH,
-            color: '#06d6a0',
-            lineWidth: 2,
-            axisLabelVisible: true,
-            title: 'VAH',
-          });
-
-          // Add volume clusters
-          data.Volume_Clusters.forEach(price => {
-            candleSeries.createPriceLine({
-              price: price,
-              color: 'rgba(67, 97, 238, 0.1)',
-              lineWidth: 1,
-              axisLabelVisible: false,
-            });
-          });
-
-          // Handle window resize
-          const resizeObserver = new ResizeObserver(entries => {
-            chart.applyOptions({
-              width: chartContainer.clientWidth,
-              height: chartContainer.clientHeight
-            });
-          });
-          resizeObserver.observe(chartContainer);
-
-        } catch (error) {
-          console.error('Chart rendering error:', error);
-          throw error; // Re-throw for loadTickerData to handle
-        }
-      }
-
-      function updateSignalPanel(ticker, data) {
-        // [Keep your existing updateSignalPanel function]
-      }
-    });
-  </script>
 </body>
 </html>
