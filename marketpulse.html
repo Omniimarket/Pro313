@@ -1,196 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MarketPulse - Working Volume Profile</title>
-  <style>
-    /* SIMPLIFIED STYLES */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f5f7fa;
-    }
-    #ticker-buttons { margin: 20px 0; }
-    .ticker-btn {
-      padding: 10px 15px;
-      background: #4361ee;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-    #chart-container {
-      width: 100%;
-      height: 500px;
-      background: white;
-      border: 1px solid #ddd;
-    }
-    #signals {
-      margin-top: 20px;
-      padding: 15px;
-      background: white;
-      border: 1px solid #ddd;
-    }
-    .cluster-pill {
-      display: inline-block;
-      background: #4361ee;
-      color: white;
-      padding: 3px 8px;
-      margin: 3px;
-      border-radius: 3px;
-      font-size: 0.9em;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarketProEdge - MarketPulse</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Lightweight Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        #chart-container {
+            height: 500px;
+        }
+        .indicator-card {
+            transition: all 0.3s ease;
+        }
+        .indicator-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
-<body>
-  <h1>MarketPulse Volume Profile</h1>
-  <div id="ticker-buttons"></div>
-  <div id="chart-container"></div>
-  <div id="signals"></div>
-  <div id="debug" style="color:red; margin-top:20px;"></div>
+<body class="min-h-screen flex flex-col bg-gray-50">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-bold tracking-tight">MarketProEdge</h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="index.html" class="text-white hover:text-blue-200 transition duration-300">Home</a></li>
+                    <li><a href="marketpulse.html" class="text-white font-semibold border-b-2 border-white pb-1">MarketPulse</a></li>
+                    <li><a href="#" class="text-white hover:text-blue-200 transition duration-300">About</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-  <!-- Using specific working version of Lightweight Charts -->
-  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
-  
-  <script>
-    // DEBUGGING HELPER
-    function debugLog(message) {
-      console.log(message);
-      document.getElementById('debug').innerHTML += message + '<br>';
-    }
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto p-6 lg:p-10">
+        <section class="bg-white rounded-xl shadow-2xl p-6 md:p-8 mb-8">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 mb-6 text-center">MarketPulse - Volume Profile Analysis</h2>
+            <p class="text-lg text-gray-600 mb-8 text-center max-w-2xl mx-auto">
+                Interactive volume profile with Point of Control, Value Areas, and technical indicators
+            </p>
 
-    // SIMPLIFIED DATA
-    const stocks = {
-      "AAPL": {
-        "POC": 198.58,
-        "VAL": 195.64,
-        "VAH": 212.56,
-        "candles": [
-          { time: "2023-01-01", open: 195, high: 199, low: 194, close: 198 },
-          { time: "2023-01-02", open: 198, high: 200, low: 197, close: 199 },
-          { time: "2023-01-03", open: 199, high: 202, low: 198, close: 200 }
-        ]
-      },
-      "NVDA": {
-        "POC": 135.17,
-        "VAL": 114.20,
-        "VAH": 144.34,
-        "candles": [
-          { time: "2023-01-01", open: 130, high: 135, low: 129, close: 134 },
-          { time: "2023-01-02", open: 134, high: 137, low: 133, close: 136 },
-          { time: "2023-01-03", open: 136, high: 139, low: 135, close: 138 }
-        ]
-      }
-    };
+            <!-- Ticker Selection -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                <div id="ticker-buttons" class="flex flex-wrap gap-2 justify-center">
+                    <!-- Buttons will be added here -->
+                </div>
+                <select id="timeframeSelect" class="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base shadow-sm">
+                    <option value="1day">1 Day</option>
+                    <option value="1week">1 Week</option>
+                </select>
+            </div>
 
-    // INITIALIZE WHEN READY
-    document.addEventListener('DOMContentLoaded', function() {
-      debugLog('DOM fully loaded');
-      
-      try {
-        // 1. CREATE BUTTONS
-        const buttonsDiv = document.getElementById('ticker-buttons');
-        if (!buttonsDiv) throw new Error('Missing ticker-buttons div');
-        
-        Object.keys(stocks).forEach(ticker => {
-          const btn = document.createElement('button');
-          btn.className = 'ticker-btn';
-          btn.textContent = ticker;
-          btn.onclick = () => loadChart(ticker);
-          buttonsDiv.appendChild(btn);
+            <!-- Chart Container -->
+            <div id="chart-container" class="w-full bg-white rounded-lg shadow-md mb-8"></div>
+
+            <!-- Indicators Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Volume Profile Signals -->
+                <div class="indicator-card bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Volume Profile</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-medium text-gray-600">POC:</span>
+                            <span id="poc-value" class="float-right font-bold">-</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-600">VAL:</span>
+                            <span id="val-value" class="float-right font-bold text-red-500">-</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-600">VAH:</span>
+                            <span id="vah-value" class="float-right font-bold text-green-500">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moving Averages -->
+                <div class="indicator-card bg-white p-6 rounded-xl shadow-md border-l-4 border-orange-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Moving Averages</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-medium text-gray-600">20 MA:</span>
+                            <span id="ma20-value" class="float-right font-bold">-</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-600">200 MA:</span>
+                            <span id="ma200-value" class="float-right font-bold">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RSI -->
+                <div class="indicator-card bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-500">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Momentum</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <span class="font-medium text-gray-600">RSI (14):</span>
+                            <span id="rsi-value" class="float-right font-bold">-</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-600">Trend:</span>
+                            <span id="trend-value" class="float-right font-bold">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="hidden flex justify-center items-center py-10">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+                <p class="ml-4 text-blue-600 text-xl">Loading data...</p>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-xl relative mt-4 shadow-md" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span id="errorText" class="block sm:inline ml-2">Something went wrong.</span>
+                <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('errorMessage').classList.add('hidden');">
+                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.303 7.348 13.95a1.2 1.2 0 0 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 0 1 1.697-1.697L10 8.697l2.652-2.651a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.652a1.2 1.2 0 0 1 0 1.697z"/></svg>
+                </span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white p-6 mt-auto">
+        <div class="container mx-auto text-center">
+            <p class="text-sm">&copy; 2025 MarketProEdge. All rights reserved.</p>
+            <p class="text-xs mt-2 text-gray-400">Disclaimer: Content is for informational purposes only, not investment advice.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Sample data with indicators
+        const stockData = {
+            "AAPL": {
+                "POC": 198.58,
+                "VAL": 195.64,
+                "VAH": 212.56,
+                "RSI": 52.3,
+                "MA20": 196.72,
+                "MA200": 185.41,
+                "trend": "↑ Bullish",
+                "candles": [
+                    { time: "2023-05-01", open: 195.50, high: 199.25, low: 194.75, close: 198.20 },
+                    { time: "2023-05-02", open: 198.50, high: 200.75, low: 197.25, close: 199.80 },
+                    { time: "2023-05-03", open: 199.50, high: 202.25, low: 198.50, close: 200.50 },
+                    { time: "2023-05-04", open: 200.75, high: 203.00, low: 199.25, close: 201.75 },
+                    { time: "2023-05-05", open: 201.50, high: 204.50, low: 200.25, close: 203.25 }
+                ]
+            },
+            "NVDA": {
+                "POC": 135.17,
+                "VAL": 114.20,
+                "VAH": 144.34,
+                "RSI": 61.8,
+                "MA20": 132.45,
+                "MA200": 121.89,
+                "trend": "↑ Strong Bullish",
+                "candles": [
+                    { time: "2023-05-01", open: 130.50, high: 135.25, low: 129.75, close: 134.20 },
+                    { time: "2023-05-02", open: 134.50, high: 137.75, low: 133.25, close: 136.80 },
+                    { time: "2023-05-03", open: 136.50, high: 139.25, low: 135.50, close: 138.50 },
+                    { time: "2023-05-04", open: 138.75, high: 141.00, low: 137.25, close: 140.75 },
+                    { time: "2023-05-05", open: 140.50, high: 143.50, low: 139.25, close: 142.25 }
+                ]
+            },
+            "TSLA": {
+                "POC": 342.83,
+                "VAL": 277.17,
+                "VAH": 361.07,
+                "RSI": 45.2,
+                "MA20": 335.60,
+                "MA200": 310.25,
+                "trend": "→ Neutral",
+                "candles": [
+                    { time: "2023-05-01", open: 335.50, high: 345.25, low: 334.75, close: 342.20 },
+                    { time: "2023-05-02", open: 342.50, high: 347.75, low: 341.25, close: 345.80 },
+                    { time: "2023-05-03", open: 345.50, high: 350.25, low: 344.50, close: 348.50 },
+                    { time: "2023-05-04", open: 348.75, high: 353.00, low: 347.25, close: 351.75 },
+                    { time: "2023-05-05", open: 351.50, high: 356.50, low: 349.25, close: 354.25 }
+                ]
+            }
+        };
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create ticker buttons
+            const tickerButtons = document.getElementById('ticker-buttons');
+            Object.keys(stockData).forEach(ticker => {
+                const btn = document.createElement('button');
+                btn.className = 'px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition';
+                btn.textContent = ticker;
+                btn.onclick = () => loadStockData(ticker);
+                tickerButtons.appendChild(btn);
+            });
+
+            // Load first stock by default
+            loadStockData(Object.keys(stockData)[0]);
         });
-        debugLog('Buttons created');
 
-        // 2. LOAD FIRST CHART
-        loadChart(Object.keys(stocks)[0]);
-        
-      } catch (error) {
-        debugLog('Initialization error: ' + error.message);
-      }
-    });
-
-    // CHART LOADING FUNCTION
-    function loadChart(ticker) {
-      debugLog(`Loading chart for ${ticker}`);
-      
-      try {
-        const data = stocks[ticker];
-        if (!data) throw new Error(`No data for ${ticker}`);
-        
-        const chartContainer = document.getElementById('chart-container');
-        const signalsDiv = document.getElementById('signals');
-        
-        if (!chartContainer || !signalsDiv) {
-          throw new Error('Missing chart container or signals div');
+        // Main function to load stock data
+        function loadStockData(ticker) {
+            showLoading(true);
+            
+            try {
+                const data = stockData[ticker];
+                if (!data) throw new Error(`No data available for ${ticker}`);
+                
+                // Update indicators
+                document.getElementById('poc-value').textContent = data.POC.toFixed(2);
+                document.getElementById('val-value').textContent = data.VAL.toFixed(2);
+                document.getElementById('vah-value').textContent = data.VAH.toFixed(2);
+                document.getElementById('rsi-value').textContent = data.RSI.toFixed(1);
+                document.getElementById('ma20-value').textContent = data.MA20.toFixed(2);
+                document.getElementById('ma200-value').textContent = data.MA200.toFixed(2);
+                document.getElementById('trend-value').textContent = data.trend;
+                
+                // Update active button
+                document.querySelectorAll('#ticker-buttons button').forEach(btn => {
+                    btn.classList.remove('bg-blue-700', 'ring-2', 'ring-blue-400');
+                    if (btn.textContent === ticker) {
+                        btn.classList.add('bg-blue-700', 'ring-2', 'ring-blue-400');
+                    }
+                });
+                
+                // Render chart
+                renderChart(data);
+                
+                showLoading(false);
+            } catch (error) {
+                showError(error.message);
+                showLoading(false);
+            }
         }
 
-        // CLEAR PREVIOUS CHART
-        chartContainer.innerHTML = '';
-        debugLog('Chart container cleared');
+        // Chart rendering function
+        function renderChart(data) {
+            const chartContainer = document.getElementById('chart-container');
+            chartContainer.innerHTML = '';
+            
+            const chart = LightweightCharts.createChart(chartContainer, {
+                width: chartContainer.clientWidth,
+                height: chartContainer.clientHeight,
+                layout: {
+                    backgroundColor: '#FFFFFF',
+                    textColor: '#191919',
+                    fontSize: 12,
+                    fontFamily: 'Inter'
+                },
+                grid: {
+                    vertLines: { color: '#f0f3fa' },
+                    horzLines: { color: '#f0f3fa' }
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal
+                },
+                rightPriceScale: {
+                    borderVisible: false
+                },
+                timeScale: {
+                    borderVisible: false
+                }
+            });
+            
+            // Candlestick series
+            const candleSeries = chart.addCandlestickSeries({
+                upColor: '#26a69a',
+                downColor: '#ef5350',
+                borderDownColor: '#ef5350',
+                borderUpColor: '#26a69a',
+                wickDownColor: '#ef5350',
+                wickUpColor: '#26a69a'
+            });
+            candleSeries.setData(data.candles);
+            
+            // Volume profile lines
+            candleSeries.createPriceLine({
+                price: data.POC,
+                color: '#4361ee',
+                lineWidth: 2,
+                lineStyle: 2, // Dashed
+                title: 'POC'
+            });
+            
+            candleSeries.createPriceLine({
+                price: data.VAL,
+                color: '#ef5350',
+                lineWidth: 2,
+                title: 'VAL'
+            });
+            
+            candleSeries.createPriceLine({
+                price: data.VAH,
+                color: '#26a69a',
+                lineWidth: 2,
+                title: 'VAH'
+            });
+            
+            // Moving averages
+            const ma20Series = chart.addLineSeries({
+                color: '#FF6D00',
+                lineWidth: 2,
+                priceScaleId: 'left'
+            });
+            ma20Series.setData(data.candles.map(candle => ({
+                time: candle.time,
+                value: data.MA20
+            })));
+            
+            const ma200Series = chart.addLineSeries({
+                color: '#2962FF',
+                lineWidth: 2,
+                priceScaleId: 'left'
+            });
+            ma200Series.setData(data.candles.map(candle => ({
+                time: candle.time,
+                value: data.MA200
+            })));
+            
+            // Handle resize
+            new ResizeObserver(() => {
+                chart.applyOptions({
+                    width: chartContainer.clientWidth,
+                    height: chartContainer.clientHeight
+                });
+            }).observe(chartContainer);
+        }
 
-        // CREATE NEW CHART
-        const chart = LightweightCharts.createChart(chartContainer, {
-          width: chartContainer.clientWidth,
-          height: chartContainer.clientHeight,
-          layout: {
-            backgroundColor: '#FFFFFF',
-            textColor: '#191919',
-          },
-          grid: {
-            vertLines: { color: '#f0f3fa' },
-            horzLines: { color: '#f0f3fa' },
-          }
-        });
-        debugLog('Chart instance created');
-
-        // ADD CANDLE SERIES
-        const candleSeries = chart.addCandlestickSeries({
-          upColor: '#26a69a',
-          downColor: '#ef5350',
-          borderDownColor: '#ef5350',
-          borderUpColor: '#26a69a',
-          wickDownColor: '#ef5350',
-          wickUpColor: '#26a69a',
-        });
-        debugLog('Candle series added');
-
-        // SET DATA
-        candleSeries.setData(data.candles);
-        debugLog('Candle data set');
-
-        // ADD POC LINE
-        candleSeries.createPriceLine({
-          price: data.POC,
-          color: '#2962FF',
-          lineWidth: 2,
-          lineStyle: 2, // Dashed
-          title: 'POC',
-        });
-        debugLog('POC line added');
-
-        // UPDATE SIGNALS PANEL
-        signalsDiv.innerHTML = `
-          <h2>${ticker} Signals</h2>
-          <p><strong>POC:</strong> $${data.POC.toFixed(2)}</p>
-          <p><strong>VAL:</strong> $${data.VAL.toFixed(2)}</p>
-          <p><strong>VAH:</strong> $${data.VAH.toFixed(2)}</p>
-        `;
-        debugLog('Signals panel updated');
-
-        // WINDOW RESIZE HANDLER
-        window.addEventListener('resize', () => {
-          chart.applyOptions({
-            width: chartContainer.clientWidth,
-            height: chartContainer.clientHeight
-          });
-        });
-
-      } catch (error) {
-        debugLog('Chart loading error: ' + error.message);
-      }
-    }
-  </script>
+        // UI Helper Functions
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
+        }
+        
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
