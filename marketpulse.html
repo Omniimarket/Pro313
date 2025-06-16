@@ -17,14 +17,6 @@
         ::-webkit-scrollbar {
             width: 8px;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
         #chart-container {
             height: 500px;
         }
@@ -34,6 +26,10 @@
         .indicator-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .search-highlight {
+            background-color: #E1EFFE;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -60,15 +56,35 @@
                 Interactive volume profile with Point of Control, Value Areas, and technical indicators
             </p>
 
-            <!-- Ticker Selection -->
+            <!-- Search and Timeframe Selection -->
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-                <div id="ticker-buttons" class="flex flex-wrap gap-2 justify-center">
-                    <!-- Buttons will be added here -->
-                </div>
-                <select id="timeframeSelect" class="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base shadow-sm">
+                <input
+                    type="text"
+                    id="symbolInput"
+                    placeholder="Search Stock (e.g. AAPL, TSLA)"
+                    class="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base w-full shadow-sm"
+                    aria-label="Stock Search Input"
+                />
+                <select
+                    id="timeframeSelect"
+                    class="p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base shadow-sm w-full sm:w-auto"
+                    aria-label="Select Timeframe"
+                >
                     <option value="1day">1 Day</option>
                     <option value="1week">1 Week</option>
+                    <option value="1month">1 Month</option>
                 </select>
+                <button
+                    id="searchBtn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 w-full sm:w-auto"
+                >
+                    Search
+                </button>
+            </div>
+
+            <!-- Ticker Quick Select -->
+            <div id="ticker-suggestions" class="flex flex-wrap gap-2 justify-center mb-6 hidden">
+                <!-- Suggestions will appear here -->
             </div>
 
             <!-- Chart Container -->
@@ -152,17 +168,19 @@
     </footer>
 
     <script>
-        // Sample data with indicators
-        const stockData = {
+        // Enhanced stock database with search functionality
+        const stockDatabase = {
             "AAPL": {
-                "POC": 198.58,
-                "VAL": 195.64,
-                "VAH": 212.56,
-                "RSI": 52.3,
-                "MA20": 196.72,
-                "MA200": 185.41,
-                "trend": "↑ Bullish",
-                "candles": [
+                name: "Apple Inc.",
+                sector: "Technology",
+                POC: 198.58,
+                VAL: 195.64,
+                VAH: 212.56,
+                RSI: 52.3,
+                MA20: 196.72,
+                MA200: 185.41,
+                trend: "↑ Bullish",
+                candles: [
                     { time: "2023-05-01", open: 195.50, high: 199.25, low: 194.75, close: 198.20 },
                     { time: "2023-05-02", open: 198.50, high: 200.75, low: 197.25, close: 199.80 },
                     { time: "2023-05-03", open: 199.50, high: 202.25, low: 198.50, close: 200.50 },
@@ -171,14 +189,16 @@
                 ]
             },
             "NVDA": {
-                "POC": 135.17,
-                "VAL": 114.20,
-                "VAH": 144.34,
-                "RSI": 61.8,
-                "MA20": 132.45,
-                "MA200": 121.89,
-                "trend": "↑ Strong Bullish",
-                "candles": [
+                name: "NVIDIA Corporation",
+                sector: "Semiconductors",
+                POC: 135.17,
+                VAL: 114.20,
+                VAH: 144.34,
+                RSI: 61.8,
+                MA20: 132.45,
+                MA200: 121.89,
+                trend: "↑ Strong Bullish",
+                candles: [
                     { time: "2023-05-01", open: 130.50, high: 135.25, low: 129.75, close: 134.20 },
                     { time: "2023-05-02", open: 134.50, high: 137.75, low: 133.25, close: 136.80 },
                     { time: "2023-05-03", open: 136.50, high: 139.25, low: 135.50, close: 138.50 },
@@ -187,45 +207,169 @@
                 ]
             },
             "TSLA": {
-                "POC": 342.83,
-                "VAL": 277.17,
-                "VAH": 361.07,
-                "RSI": 45.2,
-                "MA20": 335.60,
-                "MA200": 310.25,
-                "trend": "→ Neutral",
-                "candles": [
+                name: "Tesla Inc.",
+                sector: "Automotive",
+                POC: 342.83,
+                VAL: 277.17,
+                VAH: 361.07,
+                RSI: 45.2,
+                MA20: 335.60,
+                MA200: 310.25,
+                trend: "→ Neutral",
+                candles: [
                     { time: "2023-05-01", open: 335.50, high: 345.25, low: 334.75, close: 342.20 },
                     { time: "2023-05-02", open: 342.50, high: 347.75, low: 341.25, close: 345.80 },
                     { time: "2023-05-03", open: 345.50, high: 350.25, low: 344.50, close: 348.50 },
                     { time: "2023-05-04", open: 348.75, high: 353.00, low: 347.25, close: 351.75 },
                     { time: "2023-05-05", open: 351.50, high: 356.50, low: 349.25, close: 354.25 }
                 ]
+            },
+            "MSFT": {
+                name: "Microsoft Corporation",
+                sector: "Technology",
+                POC: 328.45,
+                VAL: 315.20,
+                VAH: 342.10,
+                RSI: 58.7,
+                MA20: 325.30,
+                MA200: 298.75,
+                trend: "↑ Bullish",
+                candles: [
+                    { time: "2023-05-01", open: 325.50, high: 330.25, low: 324.75, close: 328.20 },
+                    { time: "2023-05-02", open: 328.50, high: 332.75, low: 327.25, close: 330.80 },
+                    { time: "2023-05-03", open: 330.50, high: 335.25, low: 329.50, close: 333.50 },
+                    { time: "2023-05-04", open: 333.75, high: 338.00, low: 332.25, close: 336.75 },
+                    { time: "2023-05-05", open: 336.50, high: 340.50, low: 334.25, close: 339.25 }
+                ]
+            },
+            "AMZN": {
+                name: "Amazon.com Inc.",
+                sector: "Consumer Discretionary",
+                POC: 125.75,
+                VAL: 118.30,
+                VAH: 132.90,
+                RSI: 49.5,
+                MA20: 123.45,
+                MA200: 110.80,
+                trend: "→ Neutral",
+                candles: [
+                    { time: "2023-05-01", open: 123.50, high: 127.25, low: 122.75, close: 125.20 },
+                    { time: "2023-05-02", open: 125.50, high: 128.75, low: 124.25, close: 127.80 },
+                    { time: "2023-05-03", open: 127.50, high: 130.25, low: 126.50, close: 129.50 },
+                    { time: "2023-05-04", open: 129.75, high: 132.00, low: 128.25, close: 131.75 },
+                    { time: "2023-05-05", open: 131.50, high: 134.50, low: 130.25, close: 133.25 }
+                ]
             }
         };
 
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            // Create ticker buttons
-            const tickerButtons = document.getElementById('ticker-buttons');
-            Object.keys(stockData).forEach(ticker => {
-                const btn = document.createElement('button');
-                btn.className = 'px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition';
-                btn.textContent = ticker;
-                btn.onclick = () => loadStockData(ticker);
-                tickerButtons.appendChild(btn);
+            // Setup search functionality
+            const symbolInput = document.getElementById('symbolInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const timeframeSelect = document.getElementById('timeframeSelect');
+            const suggestionsContainer = document.getElementById('ticker-suggestions');
+            
+            // Search button click handler
+            searchBtn.addEventListener('click', function() {
+                const searchTerm = symbolInput.value.trim().toUpperCase();
+                if (searchTerm) {
+                    searchStock(searchTerm);
+                }
             });
-
+            
+            // Input field keyup handler for suggestions
+            symbolInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim().toUpperCase();
+                showSuggestions(searchTerm);
+            });
+            
+            // Timeframe change handler
+            timeframeSelect.addEventListener('change', function() {
+                const currentTicker = document.querySelector('.active-ticker');
+                if (currentTicker) {
+                    loadStockData(currentTicker.dataset.ticker);
+                }
+            });
+            
             // Load first stock by default
-            loadStockData(Object.keys(stockData)[0]);
+            loadStockData('AAPL');
         });
+
+        // Search stock function
+        function searchStock(searchTerm) {
+            showLoading(true);
+            
+            try {
+                // Check for exact match first
+                if (stockDatabase[searchTerm]) {
+                    loadStockData(searchTerm);
+                    return;
+                }
+                
+                // Check for partial matches
+                const found = Object.keys(stockDatabase).find(ticker => 
+                    ticker.includes(searchTerm) || 
+                    stockDatabase[ticker].name.toUpperCase().includes(searchTerm)
+                );
+                
+                if (found) {
+                    loadStockData(found);
+                    symbolInput.value = found;
+                } else {
+                    showError(`No stock found for "${searchTerm}"`);
+                }
+                
+                showLoading(false);
+            } catch (error) {
+                showError(error.message);
+                showLoading(false);
+            }
+        }
+
+        // Show search suggestions
+        function showSuggestions(searchTerm) {
+            const suggestionsContainer = document.getElementById('ticker-suggestions');
+            
+            if (!searchTerm || searchTerm.length < 2) {
+                suggestionsContainer.classList.add('hidden');
+                return;
+            }
+            
+            suggestionsContainer.innerHTML = '';
+            const matches = [];
+            
+            // Search tickers and names
+            for (const [ticker, data] of Object.entries(stockDatabase)) {
+                if (ticker.includes(searchTerm) || 
+                    data.name.toUpperCase().includes(searchTerm)) {
+                    matches.push({ ticker, name: data.name });
+                }
+            }
+            
+            if (matches.length > 0) {
+                matches.forEach(match => {
+                    const suggestion = document.createElement('button');
+                    suggestion.className = 'px-3 py-1 bg-gray-100 hover:bg-blue-100 rounded-md text-sm';
+                    suggestion.textContent = `${match.ticker} - ${match.name}`;
+                    suggestion.onclick = () => {
+                        symbolInput.value = match.ticker;
+                        searchStock(match.ticker);
+                    };
+                    suggestionsContainer.appendChild(suggestion);
+                });
+                suggestionsContainer.classList.remove('hidden');
+            } else {
+                suggestionsContainer.classList.add('hidden');
+            }
+        }
 
         // Main function to load stock data
         function loadStockData(ticker) {
             showLoading(true);
             
             try {
-                const data = stockData[ticker];
+                const data = stockDatabase[ticker];
                 if (!data) throw new Error(`No data available for ${ticker}`);
                 
                 // Update indicators
@@ -237,13 +381,11 @@
                 document.getElementById('ma200-value').textContent = data.MA200.toFixed(2);
                 document.getElementById('trend-value').textContent = data.trend;
                 
-                // Update active button
-                document.querySelectorAll('#ticker-buttons button').forEach(btn => {
-                    btn.classList.remove('bg-blue-700', 'ring-2', 'ring-blue-400');
-                    if (btn.textContent === ticker) {
-                        btn.classList.add('bg-blue-700', 'ring-2', 'ring-blue-400');
-                    }
-                });
+                // Update active ticker display
+                document.querySelectorAll('.active-ticker').forEach(el => el.classList.remove('active-ticker'));
+                symbolInput.classList.add('active-ticker');
+                symbolInput.dataset.ticker = ticker;
+                symbolInput.value = ticker;
                 
                 // Render chart
                 renderChart(data);
@@ -280,7 +422,8 @@
                     borderVisible: false
                 },
                 timeScale: {
-                    borderVisible: false
+                    borderVisible: false,
+                    timeVisible: true
                 }
             });
             
